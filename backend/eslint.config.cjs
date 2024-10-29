@@ -1,9 +1,9 @@
 module.exports = [
   {
-    ignores: ['node_modules/**'],
+    ignores: ['node_modules/**', 'dist/**'],
   },
   {
-    files: ['**/*.js'],
+    files: ['src/**/*.js'],
     languageOptions: {
       ecmaVersion: 2021,
       sourceType: 'module',
@@ -13,7 +13,7 @@ module.exports = [
       jest: true,
     },
     rules: {
-      // Add specific rules here
+      // Add your specific rules here
     },
   },
 ];
