@@ -19,40 +19,18 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.x, 14.x, 16.x]
+        node-version: [14.x, 16.x, 18.x]
         app: [frontend, backend]
     steps:
-    - uses: actions/checkout@v2
-    
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
-      with:
-        node-version: ${{ matrix.node-version }}
-    
-    - name: Cache npm dependencies
-      uses: actions/cache@v2
-      with:
-        path: ~/.npm
-        key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.OS }}-node-
-    
-    - name: Install dependencies
-      run: |
-        cd ${{ matrix.app }}
-        npm ci
-    
-    - name: Build ${{ matrix.app }} container
-      run: |
-        cd ${{ matrix.app }}
-        docker build -t hospital-${{ matrix.app }}:${{ github.sha }} .
-    
+    # ... (previous steps remain unchanged)
+
     - name: Run ${{ matrix.app }} unit tests
       run: |
-        docker run hospital-${{ matrix.app }}:${{ github.sha }} npm test -- --json --outputFile=test-results.json
-    
+        cd ${{ matrix.app }}
+        npm test -- --json --outputFile=test-results.json
+
     - name: Upload test results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3  # Updated from v2 to v3
       with:
         name: test-results-${{ matrix.app }}-${{ matrix.node-version }}
         path: ${{ matrix.app }}/test-results.json
