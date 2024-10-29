@@ -3,18 +3,32 @@ name: CI Pipeline
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - '.github/workflows/**'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - '.github/workflows/**'
 
 jobs:
-  build-frontend:
+  build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x, 16.x]
+        app: [frontend, backend]
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Node.js
+    
+    - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v2
       with:
-        node-version: '14'
+        node-version: ${{ matrix.node-version }}
+    
     - name: Cache npm dependencies
       uses: actions/cache@v2
       with:
@@ -22,61 +36,55 @@ jobs:
         key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.OS }}-node-
-    - name: Build frontend container
+    
+    - name: Install dependencies
       run: |
-        cd frontend
-        docker build -t hospital-frontend:${{ github.sha }} .
-    - name: Run frontend unit tests
+        cd ${{ matrix.app }}
+        npm ci
+    
+    - name: Build ${{ matrix.app }} container
       run: |
-        docker run hospital-frontend:${{ github.sha }} npm test
-    - name: Run frontend linter
+        cd ${{ matrix.app }}
+        docker build -t hospital-${{ matrix.app }}:${{ github.sha }} .
+    
+    - name: Run ${{ matrix.app }} unit tests
       run: |
-        docker run hospital-frontend:${{ github.sha }} npm run lint
-    - name: Run SAST for frontend
+        docker run hospital-${{ matrix.app }}:${{ github.sha }} npm test -- --json --outputFile=test-results.json
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-results-${{ matrix.app }}-${{ matrix.node-version }}
+        path: ${{ matrix.app }}/test-results.json
+    
+    - name: Run ${{ matrix.app }} linter
+      run: |
+        docker run hospital-${{ matrix.app }}:${{ github.sha }} npm run lint
+    
+    - name: Run SAST for ${{ matrix.app }}
       uses: github/codeql-action/analyze@v1
+    
     - name: Login to DockerHub
       uses: docker/login-action@v1
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Push frontend image to DockerHub
+    
+    - name: Push ${{ matrix.app }} image to DockerHub
       run: |
-        docker tag hospital-frontend:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/hospital-frontend:${{ github.sha }}
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/hospital-frontend:${{ github.sha }}
+        docker tag hospital-${{ matrix.app }}:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/hospital-${{ matrix.app }}:${{ github.sha }}
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/hospital-${{ matrix.app }}:${{ github.sha }}
 
-  build-backend:
+  deploy:
+    needs: build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
-    - name: Cache npm dependencies
-      uses: actions/cache@v2
-      with:
-        path: ~/.npm
-        key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.OS }}-node-
-    - name: Build backend container
+    
+    - name: Deploy to staging
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
-        cd backend
-        docker build -t hospital-backend:${{ github.sha }} .
-    - name: Run backend unit tests
-      run: |
-        docker run hospital-backend:${{ github.sha }} npm test
-    - name: Run backend linter
-      run: |
-        docker run hospital-backend:${{ github.sha }} npm run lint
-    - name: Run SAST for backend
-      uses: github/codeql-action/analyze@v1
-    - name: Login to DockerHub
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Push backend image to DockerHub
-      run: |
-        docker tag hospital-backend:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/hospital-backend:${{ github.sha }}
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/hospital-backend:${{ github.sha }}
+        echo "Deploying to staging environment"
+        # Add your deployment script here
+    
+    
