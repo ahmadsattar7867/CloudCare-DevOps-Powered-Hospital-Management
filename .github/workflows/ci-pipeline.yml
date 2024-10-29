@@ -16,6 +16,7 @@ on:
 
 jobs:
   build:
+    timeout-minutes: 120
     runs-on: ubuntu-latest
     strategy:
       matrix:
