@@ -85,15 +85,11 @@ jobs:
         name: test-results-${{ matrix.app }}-${{ matrix.node-version }}
         path: ${{ matrix.app }}/test-results.json
     
-    - name: Run ${{ matrix.app }} linter
+    - name: Run backend linter
       run: |
-        if [ "${{ matrix.app }}" = "backend" ]; then
           cd backend
           npx eslint --config eslint.config.cjs **/*.cjs
-        else
-          echo "${{ matrix.app }} directory not found"
-          exit 1
-        fi
+
     
 
   deploy:
