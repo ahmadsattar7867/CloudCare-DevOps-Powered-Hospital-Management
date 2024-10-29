@@ -1,18 +1,82 @@
-name: Docker Image CI
+name: CI Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
-
-  build:
-
+  build-frontend:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+    - uses: actions/checkout@v2
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+    - name: Cache npm dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.npm
+        key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.OS }}-node-
+    - name: Build frontend container
+      run: |
+        cd frontend
+        docker build -t hospital-frontend:${{ github.sha }} .
+    - name: Run frontend unit tests
+      run: |
+        docker run hospital-frontend:${{ github.sha }} npm test
+    - name: Run frontend linter
+      run: |
+        docker run hospital-frontend:${{ github.sha }} npm run lint
+    - name: Run SAST for frontend
+      uses: github/codeql-action/analyze@v1
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Push frontend image to DockerHub
+      run: |
+        docker tag hospital-frontend:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/hospital-frontend:${{ github.sha }}
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/hospital-frontend:${{ github.sha }}
+
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+    - name: Cache npm dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.npm
+        key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.OS }}-node-
+    - name: Build backend container
+      run: |
+        cd backend
+        docker build -t hospital-backend:${{ github.sha }} .
+    - name: Run backend unit tests
+      run: |
+        docker run hospital-backend:${{ github.sha }} npm test
+    - name: Run backend linter
+      run: |
+        docker run hospital-backend:${{ github.sha }} npm run lint
+    - name: Run SAST for backend
+      uses: github/codeql-action/analyze@v1
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Push backend image to DockerHub
+      run: |
+        docker tag hospital-backend:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/hospital-backend:${{ github.sha }}
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/hospital-backend:${{ github.sha }}
