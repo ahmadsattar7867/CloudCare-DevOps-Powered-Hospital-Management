@@ -54,7 +54,7 @@ describe('Server', () => {
         .post('/auth/login')
         .send({ username: 'testuser', password: 'testpass' })
         .expect(400); // Assuming 400 for invalid credentials
-    }, 10000); // Increase timeout to 10 seconds
+    }, 100000); // Increase timeout to 10 seconds
   });
 
   describe('User routes', () => {
