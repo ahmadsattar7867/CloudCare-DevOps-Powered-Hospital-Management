@@ -19,25 +19,68 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x]
+        node-version: [12.x, 14.x, 16.x]
         app: [frontend, backend]
     steps:
-    # ... (previous steps remain unchanged)
-
+    - uses: actions/checkout@v2
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+    
+    - name: Cache npm dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.npm
+        key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.OS }}-node-
+    
+    - name: Install dependencies
+      run: |
+        if [ -d "${{ matrix.app }}" ]; then
+          cd ${{ matrix.app }}
+          npm ci
+        else
+          echo "${{ matrix.app }} directory not found"
+          exit 1
+        fi
+    
+    - name: Build ${{ matrix.app }} container
+      run: |
+        if [ -d "${{ matrix.app }}" ]; then
+          cd ${{ matrix.app }}
+          docker build -t hospital-${{ matrix.app }}:${{ github.sha }} .
+        else
+          echo "${{ matrix.app }} directory not found"
+          exit 1
+        fi
+    
     - name: Run ${{ matrix.app }} unit tests
       run: |
-        cd ${{ matrix.app }}
-        npm test -- --json --outputFile=test-results.json
-
+        if [ -d "${{ matrix.app }}" ]; then
+          docker run hospital-${{ matrix.app }}:${{ github.sha }} npm test -- --json --outputFile=test-results.json
+        else
+          echo "${{ matrix.app }} directory not found"
+          exit 1
+        fi
+    
     - name: Upload test results
-      uses: actions/upload-artifact@v3  # Updated from v2 to v3
+      uses: actions/upload-artifact@v2
       with:
         name: test-results-${{ matrix.app }}-${{ matrix.node-version }}
         path: ${{ matrix.app }}/test-results.json
+      if: always()
     
     - name: Run ${{ matrix.app }} linter
       run: |
-        docker run hospital-${{ matrix.app }}:${{ github.sha }} npm run lint
+        if [ -d "${{ matrix.app }}" ]; then
+          docker run hospital-${{ matrix.app }}:${{ github.sha }} npm run lint
+        else
+          echo "${{ matrix.app }} directory not found"
+          exit 1
+        fi
     
     - name: Run SAST for ${{ matrix.app }}
       uses: github/codeql-action/analyze@v1
@@ -50,8 +93,13 @@ jobs:
     
     - name: Push ${{ matrix.app }} image to DockerHub
       run: |
-        docker tag hospital-${{ matrix.app }}:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/hospital-${{ matrix.app }}:${{ github.sha }}
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/hospital-${{ matrix.app }}:${{ github.sha }}
+        if [ -d "${{ matrix.app }}" ]; then
+          docker tag hospital-${{ matrix.app }}:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/hospital-${{ matrix.app }}:${{ github.sha }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/hospital-${{ matrix.app }}:${{ github.sha }}
+        else
+          echo "${{ matrix.app }} directory not found"
+          exit 1
+        fi
 
   deploy:
     needs: build
@@ -65,4 +113,4 @@ jobs:
         echo "Deploying to staging environment"
         # Add your deployment script here
     
-    
+ 
