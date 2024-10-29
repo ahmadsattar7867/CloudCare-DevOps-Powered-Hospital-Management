@@ -1,4 +1,4 @@
-export default [
+module.exports = [
   {
     ignores: ['node_modules/**'],
   },
@@ -13,7 +13,7 @@ export default [
       jest: true,
     },
     rules: {
-      // Add any specific rules here
+      // Add specific rules here
     },
   },
 ];

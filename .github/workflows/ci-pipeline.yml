@@ -89,7 +89,7 @@ jobs:
       run: |
         if [ -d "${{ matrix.app }}" ]; then
           cd ${{ matrix.app }}
-          eslint . --ignore-pattern node_modules/
+          npm run lint
         else
           echo "${{ matrix.app }} directory not found"
           exit 1
