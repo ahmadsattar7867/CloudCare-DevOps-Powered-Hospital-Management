@@ -72,6 +72,9 @@ jobs:
           echo "${{ matrix.app }} directory not found"
           exit 1
         fi
+      env:
+        CI: true
+      timeout-minutes: 10
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
