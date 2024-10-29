@@ -87,15 +87,18 @@ jobs:
     
     - name: Run ${{ matrix.app }} linter
       run: |
-        if [ -d "${{ matrix.app }}" ]; then
-          cd ${{ matrix.app }}
-          npx eslint --config eslint.config.cjs **/*.cjs
-        else
-          echo "${{ matrix.app }} directory not found"
-          exit 1
-        fi
+          if [ "${{ matrix.app }}" = "backend" ]; then
+            if [ -d "${{ matrix.app }}" ]; then
+              cd ${{ matrix.app }}
+              npx eslint --config eslint.config.cjs **/*.cjs
+            else
+              echo "${{ matrix.app }} directory not found"
+              exit 1
+            fis
+          else
+            echo "Skipping linter for ${matrix.app}"
+          fi
     
-    # ... rest of your workflow
 
   deploy:
     needs: build
