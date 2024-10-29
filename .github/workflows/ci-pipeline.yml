@@ -68,7 +68,7 @@ jobs:
       run: |
         if [ -d "${{ matrix.app }}" ]; then
           cd ${{ matrix.app }}
-          npm test
+          npm test -- --json --outputFile=test-results.json
         else
           echo "${{ matrix.app }} directory not found"
           exit 1
