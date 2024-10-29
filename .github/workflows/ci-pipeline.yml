@@ -33,9 +33,10 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.npm
-        key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
-          ${{ runner.OS }}-node-
+          ${{ runner.os }}-node-${{ matrix.node-version }}-
+          ${{ runner.os }}-node-
     
     - name: Install dependencies
       run: |
@@ -113,3 +114,4 @@ jobs:
         echo "Deploying to staging environment"
         # Add your deployment script here
     
+ 
