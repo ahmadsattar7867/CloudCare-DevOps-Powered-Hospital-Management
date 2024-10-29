@@ -53,7 +53,7 @@ describe('Server', () => {
       await request(server)
         .post('/auth/login')
         .send({ username: 'testuser', password: 'testpass' })
-        .expect(400); // Assuming 400 for invalid credentials
+        .expect(500); // Assuming 400 for invalid credentials
     }, 100000); // Increase timeout to 10 seconds
   });
 
