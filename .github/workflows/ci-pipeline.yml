@@ -4,15 +4,11 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'frontend/**'
-      - 'backend/**'
-      - '.github/workflows/**'
+      - '**'
   pull_request:
     branches: [ main ]
     paths:
-      - 'frontend/**'
-      - 'backend/**'
-      - '.github/workflows/**'
+      - '**'
 
 jobs:
   build:
