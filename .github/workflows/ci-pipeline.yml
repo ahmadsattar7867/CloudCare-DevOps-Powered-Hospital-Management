@@ -2,83 +2,104 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
     paths:
-      - '**/package.json'
-      - '**/Dockerfile'
+      - 'frontend/**'
+      - 'backend/**'
       - '.github/workflows/**'
   pull_request:
-    branches: [main]
+    branches: [ main ]
     paths:
-      - '**/package.json'
-      - '**/Dockerfile'
+      - 'frontend/**'
+      - 'backend/**'
       - '.github/workflows/**'
 
 jobs:
   build:
-    timeout-minutes: 90
+    timeout-minutes: 120
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [20.x]
         app: [frontend, backend]
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-${{ matrix.node-version }}-
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: |
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    
+    - name: Cache npm dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-${{ matrix.node-version }}-
+          ${{ runner.os }}-node-
+    
+    - name: Install dependencies
+      run: |
+        if [ -d "${{ matrix.app }}" ]; then
           cd ${{ matrix.app }}
           npm ci
-
-      - name: Build Docker image
-        run: |
+        else
+          echo "${{ matrix.app }} directory not found"
+          exit 1
+        fi
+    
+    - name: Build ${{ matrix.app }} container
+      run: |
+        if [ -d "${{ matrix.app }}" ]; then
           cd ${{ matrix.app }}
-          docker build -t hospital-${{ matrix.app }}:${{ github.sha }} -f ${matrix.app}-Dockerfile .
-
-      - name: Run unit tests
-        run: |
+          # Use specific Dockerfile for frontend and backend
+          if [ "${{ matrix.app }}" == "frontend" ]; then
+            docker build -t hospital-frontend:${{ github.sha }} -f frontend-Dockerfile .
+          else
+            docker build -t hospital-backend:${{ github.sha }} -f backend-Dockerfile .
+          fi
+        else
+          echo "${{ matrix.app }} directory not found"
+          exit 1
+        fi
+    
+    - name: Run ${{ matrix.app }} unit tests
+      run: |
+        if [ -d "${{ matrix.app }}" ]; then
           cd ${{ matrix.app }}
           npm test -- --json --outputFile=test-results.json
-        env:
-          CI: true
-          NODE_ENV: test
-        timeout-minutes: 15
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results-${{ matrix.app }}-${{ matrix.node-version }}
-          path: ${{ matrix.app }}/test-results.json
-
-      - name: Run backend linter
-        if: matrix.app == 'backend'
-        run: |
+        else
+          echo "${{ matrix.app }} directory not found"
+          exit 1
+        fi
+      env:
+        CI: true
+        NODE_ENV: test
+      timeout-minutes: 15
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.app }}-${{ matrix.node-version }}
+        path: ${{ matrix.app }}/test-results.json
+    
+    - name: Run backend linter
+      run: |
           cd backend
           npx eslint --config eslint.config.cjs **/*.cjs
+
+    
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy to staging
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          echo "Deploying to staging environment"
-          # Add your deployment script here
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to staging
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        echo "Deploying to staging environment"
+        # Add your deployment script here
