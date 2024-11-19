@@ -1,0 +1,195 @@
+# command used
+# helm template hospital . -f values.yaml > rendered-manifests.yaml
+
+---
+# Source: hospital-chart/templates/rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hospital-sa
+---
+# Source: hospital-chart/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hospital-hospital-secret
+type: Opaque
+data:
+  JWT_SECRET: MTIzNDU=
+---
+# Source: hospital-chart/templates/configMap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hospital-hospital-config
+data:
+  DB_URI: mongodb://mongodb:27017/hospital
+---
+# Source: hospital-chart/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: hospital-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "secrets", "configmaps"]
+    verbs: ["get", "list", "watch"]
+---
+# Source: hospital-chart/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hospital-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: hospital-sa
+roleRef:
+  kind: Role
+  name: hospital-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: hospital-chart/templates/backend-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hospital-backend
+spec:
+  type: ClusterIP
+  selector:
+    app: hospital-app
+    release: hospital
+  ports:
+    - port: 4451
+      targetPort: 4451
+---
+# Source: hospital-chart/templates/frontend-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hospital-frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: hospital-app
+    release: hospital
+  ports:
+    - port: 4173
+      targetPort: 4173
+---
+# Source: hospital-chart/templates/mongo-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hospital-mongodb
+spec:
+  selector:
+    app: mongodb
+    release: hospital
+  ports:
+    - port: 27017
+      targetPort: 27017
+---
+# Source: hospital-chart/templates/frontend-backend.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hospital-hospital-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hospital-app
+      release: hospital
+  template:
+    metadata:
+      labels:
+        app: hospital-app
+        release: hospital
+    spec:
+      serviceAccountName: hospital-sa
+      containers:
+      - name: frontend
+        image: "wajeeha835/web-frontend:v0"
+        ports:
+        - containerPort: 4173
+        command: ["npm", "run", "preview"]
+        securityContext:
+          runAsUser: 0
+      - name: backend
+        image: "wajeeha835/web-backend:v0"
+        ports:
+        - containerPort: 4451
+        command: ["node", "server.js"]
+        securityContext:
+          runAsUser: 0
+        env:
+        - name: DB_URI
+          valueFrom:
+            configMapKeyRef:
+              name: hospital-hospital-config
+              key: DB_URI
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: hospital-hospital-secret
+              key: JWT_SECRET
+---
+# Source: hospital-chart/templates/mongodb-statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hospital-mongodb
+spec:
+  serviceName: hospital-mongodb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+      release: hospital
+  template:
+    metadata:
+      labels:
+        app: mongodb
+        release: hospital
+    spec:
+      containers:
+      - name: mongodb
+        image: "mongo:6.0"
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+---
+# Source: hospital-chart/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hospital-ingress
+spec:
+  rules:
+  - host: hospital.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: hospital-frontend
+            port: 
+              number: 4173
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: hospital-backend
+            port: 
+              number: 4451
