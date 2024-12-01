@@ -1,13 +1,18 @@
-variable "region" {
-  description = "AWS region"
+# variables.tf for Kubernetes Resources Deployment
+
+variable "project_id" {
+  description = "GCP Project ID"
   type        = string
-  default     = "us-west-2"
+}
+
+variable "region" {
+  description = "GCP region"
+  type        = string
 }
 
 variable "cluster_name" {
-  description = "Name of the EKS cluster"
+  description = "Name of the GKE cluster"
   type        = string
-  default     = "hospital-eks-cluster"
 }
 
 variable "app_hostname" {
@@ -31,7 +36,7 @@ variable "mongodb_image_tag" {
 variable "frontend_image_repository" {
   description = "Frontend image repository"
   type        = string
-  default     = "ahmad/web-frontend"
+  default     = "ahmadsattar78677/web-frontend"
 }
 
 variable "frontend_image_tag" {
@@ -43,7 +48,7 @@ variable "frontend_image_tag" {
 variable "backend_image_repository" {
   description = "Backend image repository"
   type        = string
-  default     = "ahmad/web-backend"
+  default     = "ahmadsattar78677/web-backend"
 }
 
 variable "backend_image_tag" {
@@ -63,3 +68,4 @@ variable "jwt_secret" {
   type        = string
   default     = "MTIzNDU="
 }
+

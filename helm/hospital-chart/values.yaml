@@ -8,14 +8,14 @@ mongodb:
 hospitalApp:
   frontend:
     image:
-      repository: ahmad/web-frontend
+      repository: ahmadsattar78677/web-frontend
       tag: v0
     service:
       type: ClusterIP
       port: 4173
   backend:
     image:
-      repository: ahmad/web-backend
+      repository: ahmadsattar78677/web-backend
       tag: v0
     service:
       type: ClusterIP

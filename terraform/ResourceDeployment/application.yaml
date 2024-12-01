@@ -1,3 +1,5 @@
+# application.yaml
+
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -8,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/ahmadsattar7867/hospital-web.git  
     targetRevision: HEAD
-    path: ../helm/hospital-chart 
+    path: ../../helm/hospital-chart 
   destination:
     server: https://kubernetes.default.svc
     namespace: default

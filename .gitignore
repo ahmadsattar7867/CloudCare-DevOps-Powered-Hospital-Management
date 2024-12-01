@@ -1,9 +1,10 @@
 # Ignore Terraform cache files
-terraform/.terraform/
+terraform/ClusterCreation/.terraform/
+terraform/ResourceDeployment/.terraform/
 
 # Ignore Terraform state files
-terraform/terraform.tfstate
-terraform/terraform.tfstate.backup
+terraform/ClusterCreation/terraform.tfstate
+terraform/ResourceDeployment/terraform.tfstate.backup
 
 # Ignore crash logs
 terraform/crash.log
