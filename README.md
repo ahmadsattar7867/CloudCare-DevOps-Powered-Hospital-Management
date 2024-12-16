@@ -1,68 +1,71 @@
-# Hospital Management System using MERN Stack,Redux, TailwindCSS and Framer Motion
+# Hospital Management System
 
-<img src="images/1.jpg">
+## Project Overview
 
-## Overview
+This project is a comprehensive Hospital Management System that demonstrates the implementation of modern DevOps practices and cloud-native technologies. It showcases a full-stack application with microservices architecture, containerization, automated CI/CD pipelines, and deployment to a Kubernetes cluster on AWS using Terraform.
 
-This Hospital Management System is a web application developed using the MERN (MongoDB, Express.js, React, Node.js) stack with Redux for state management and TailwindCSS for responsive UI design. The system aims to streamline hospital operations, improve patient care, and enhance overall efficiency.
+## Key Features
 
-<img src="images/2.jpg">
-<img src="images/3.jpg">
-## Features
+- Microservices-based architecture for scalability and maintainability
+- Containerization using Docker for consistent development and deployment
+- Kubernetes orchestration for robust and scalable cloud deployment
+- CI/CD pipelines for automated testing, building, and deployment
+- Infrastructure as Code using Terraform for AWS resource management
+- Helm charts for streamlined Kubernetes deployments
+- Comprehensive security measures including RBAC, network policies, and secrets management
 
-- **User Authentication**: Secure user authentication system for administrators, doctors, and staff members.
-- **Patient Management**: Easily manage patient records, including admission, discharge, and medical history.
-- **Appointment Scheduling**: Efficiently schedule and manage patient appointments with doctors.
-- **Inventory Management**: Keep track of medical supplies and equipment inventory.
-- **Billing System**: Generate and manage invoices for patient services.
-- **Reports and Analytics**: Generate insightful reports and analytics for better decision-making.
-- **Responsive Design**: Taileing is used for a desktop-friendly and responsive user interface.
+## Technologies Used
 
-## Prerequisites
+- Development: MERN Stack
+- Containerization: Docker
+- Orchestration: Kubernetes
+- CI/CD: [Your CI/CD tool, e.g., GitLab CI, GitHub Actions, Jenkins]
+- Infrastructure as Code: Terraform
+- Cloud Provider: AWS
+- Package Management: Helm
 
-Before you begin, ensure you have the following installed:
+## Containerization
 
-- [Node.js](https://nodejs.org/)
-- [MongoDB](https://www.mongodb.com/try/download/community)
+Each service in the project is containerized using Docker. Optimized Dockerfiles are provided for each service, implementing best practices such as multi-stage builds and non-root users for enhanced security.
 
-## Getting Started
+### Docker Compose for Local Development
 
-1. **Clone the repository:**
+A \`docker-compose.yml\` file is provided in the root directory, allowing for easy local development and testing. It includes configurations for hot-reloading to streamline the development process.
 
-   ```bash
-   git clone https://github.com/all3n2601/HMSMern.git
-   ```
-2. **Navigate to the project directory:
+## Kubernetes Deployment
 
-   ```bash
-   cd frontend
-   ```
-3. **Install dependencies:
+The application is deployed to a Kubernetes cluster on AWS. Key features of the Kubernetes setup include:
 
-   ```bash
-   npm install
-   ```
-4. **Set up MongoDB:
-   - Create a MongoDB database.
-   - Update the MongoDB connection string in env
-   - Create a secret jwt key in  server/config/config.js.
+- Helm charts for templating and managing Kubernetes resources
+- RBAC implementation for secure access control
+- Ingress controllers for routing external traffic
+- StatefulSets and Persistent Volume Claims (PVCs) for database management
 
-5. **Start the application:
+## CI/CD Pipeline
 
-   ```bash
-   npm run dev
-   ```
+The project includes a comprehensive CI/CD pipeline that automates the following tasks:
 
-## Contributing
+- Building Docker containers for all components
+- Running unit tests
+- Performing linting and Static Application Security Testing (SAST)
+- Pushing containers to DockerHub with appropriate tags
 
-We welcome contributions! Please follow our contribution guidelines.
+The pipeline is configured to run on commits to the main branch and on pull request creation.
 
-## License
-This project is licensed under the MIT License.
+## Cloud Deployment
 
-## Acknowledgments
-Thanks to the MERN and Redux TailwindCSS communities for their amazing tools and resources.
+The application is deployed on AWS using the following approach:
 
-## Contact
-For any inquiries or issues, please contact [allsurej@gmail.com].
+- Terraform is used to provision and manage the Kubernetes cluster and associated AWS resources
+- Helm charts are used in conjunction with Terraform to deploy the application to the cluster
+
+## Security and Monitoring
+
+Security measures implemented in the project include:
+
+- Service accounts and RBAC for access control
+- Network policies to control inter-pod communication
+- Secrets management for sensitive information
+
+
 
