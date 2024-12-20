@@ -2,11 +2,10 @@
 
 ## Project Overview
 
-This project is a comprehensive Hospital Management System that demonstrates the implementation of modern DevOps practices and cloud-native technologies. It showcases a full-stack application with microservices architecture, containerization, automated CI/CD pipelines, and deployment to a Kubernetes cluster on AWS using Terraform.
+This project is a comprehensive Hospital Management System that demonstrates the implementation of modern DevOps practices and cloud-native technologies. It showcases a full-stack application, it's containerization, automated CI/CD pipelines, and deployment to a Kubernetes cluster on AWS using Terraform.
 
 ## Key Features
 
-- Microservices-based architecture for scalability and maintainability
 - Containerization using Docker for consistent development and deployment
 - Kubernetes orchestration for robust and scalable cloud deployment
 - CI/CD pipelines for automated testing, building, and deployment
