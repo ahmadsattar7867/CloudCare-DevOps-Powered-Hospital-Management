@@ -1,4 +1,4 @@
-# Hospital Management System
+# CloudCare-DevOps-Powered-Hospital-Management
 
 ## Project Overview
 
